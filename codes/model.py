@@ -248,13 +248,17 @@ class KGEModel(nn.Module):
         return score
     
     @staticmethod
-    def train_step(model, optimizer, train_iterator, args):
+    def train_step(model, optimizer, train_iterator, args, step):
         '''
-        A single train step. Apply back-propation and return the loss
-        '''
+    A single train step. Apply back-propagation and return the loss
+    :param model: The KGEModel instance
+    :param optimizer: The optimizer (e.g., Adam)
+    :param train_iterator: BidirectionalOneShotIterator for training data
+    :param args: Parsed arguments from argparse
+    :param step: Current training step (used for temperature decay)
+    '''
 
         model.train()
-
         optimizer.zero_grad()
 
         positive_sample, negative_sample, subsampling_weight, mode = next(train_iterator)
@@ -267,14 +271,16 @@ class KGEModel(nn.Module):
         negative_score = model((positive_sample, negative_sample), mode=mode)
 
         if args.negative_adversarial_sampling:
+            # Calculate dynamic temperature based on step
+            current_temperature = args.initial_adversarial_temperature * (1 - args.decay_rate) ** step
+            current_temperature = max(current_temperature, 0.01)  # Prevent temperature from becoming too small
             #In self-adversarial sampling, we do not apply back-propagation on the sampling weight
-            negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim = 1).detach() 
+            negative_score = (F.softmax(negative_score * current_temperature, dim = 1).detach() 
                               * F.logsigmoid(-negative_score)).sum(dim = 1)
         else:
             negative_score = F.logsigmoid(-negative_score).mean(dim = 1)
 
         positive_score = model(positive_sample)
-
         positive_score = F.logsigmoid(positive_score).squeeze(dim = 1)
 
         if args.uni_weight:
@@ -305,7 +311,8 @@ class KGEModel(nn.Module):
             **regularization_log,
             'positive_sample_loss': positive_sample_loss.item(),
             'negative_sample_loss': negative_sample_loss.item(),
-            'loss': loss.item()
+            'loss': loss.item(),
+            'current_temperature': current_temperature if args.negative_adversarial_sampling else 0.0
         }
 
         return log
