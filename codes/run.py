@@ -68,6 +68,9 @@ def parse_args(args=None):
     parser.add_argument('--nentity', type=int, default=0, help='DO NOT MANUALLY SET')
     parser.add_argument('--nrelation', type=int, default=0, help='DO NOT MANUALLY SET')
     
+    parser.add_argument('--initial_adversarial_temperature', type=float, default=1.0, help='Initial temperature for adversarial training')
+    parser.add_argument('--decay_rate', type=float, default=0.01, help='Decay rate for adversarial temperature')
+    
     return parser.parse_args(args)
 
 def override_config(args):

@@ -25,6 +25,8 @@ ALPHA=${10}
 LEARNING_RATE=${11}
 MAX_STEPS=${12}
 TEST_BATCH_SIZE=${13}
+INITIAL_ADVERSARIAL_TEMPERATURE=${14}
+DECAY_RATE=${15}
 
 if [ $MODE == "train" ]
 then
@@ -41,7 +43,9 @@ CUDA_VISIBLE_DEVICES=$GPU_DEVICE python -u $CODE_PATH/run.py --do_train \
     -g $GAMMA -a $ALPHA -adv \
     -lr $LEARNING_RATE --max_steps $MAX_STEPS \
     -save $SAVE --test_batch_size $TEST_BATCH_SIZE \
-    ${14} ${15} ${16} ${17} ${18} ${19} ${20}
+    ${16} ${17} ${18} ${19} ${20} ${21} ${22} \
+    --initial_adversarial_temperature $INITIAL_ADVERSARIAL_TEMPERATURE \
+    --decay_rate $DECAY_RATE
 
 elif [ $MODE == "valid" ]
 then
