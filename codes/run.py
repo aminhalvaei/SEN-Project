@@ -288,12 +288,12 @@ def main(args):
     logging.info('Start Training...')
     logging.info('init_step = %d' % init_step)
     logging.info('batch_size = %d' % args.batch_size)
-    logging.info('negative_adversarial_sampling = %d' % args.negative_adversarial_sampling)
+    logging.info('negative_adversarial_sampling = %s' % str(args.negative_adversarial_sampling))
     logging.info('hidden_dim = %d' % args.hidden_dim)
     logging.info('gamma = %f' % args.gamma)
-    logging.info('negative_adversarial_sampling = %s' % str(args.negative_adversarial_sampling))
     if args.negative_adversarial_sampling:
-        logging.info('adversarial_temperature = %f' % args.adversarial_temperature)
+        logging.info('initial_adversarial_temperature = %f' % args.initial_adversarial_temperature)
+        logging.info('decay_rate = %f' % args.decay_rate)
     
     # Set valid dataloader as it would be evaluated during training
     
@@ -305,7 +305,7 @@ def main(args):
         #Training Loop
         for step in range(init_step, args.max_steps):
             
-            log = kge_model.train_step(kge_model, optimizer, train_iterator, args)
+            log = kge_model.train_step(kge_model, optimizer, train_iterator, args, step)
             
             training_logs.append(log)
             
