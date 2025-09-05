@@ -1,0 +1,256 @@
+2.8.0+cu126
+Start Training......
+2025-09-05 16:09:32,032 INFO     Model: RotatE
+2025-09-05 16:09:32,032 INFO     Data Path: data/FB15k-237
+2025-09-05 16:09:32,032 INFO     #entity: 14541
+2025-09-05 16:09:32,032 INFO     #relation: 237
+2025-09-05 16:09:32,252 INFO     #train: 272115
+2025-09-05 16:09:32,269 INFO     #valid: 17535
+2025-09-05 16:09:32,285 INFO     #test: 20466
+2025-09-05 16:09:32,542 INFO     Model Parameter Configuration:
+2025-09-05 16:09:32,542 INFO     Parameter gamma: torch.Size([1]), require_grad = False
+2025-09-05 16:09:32,543 INFO     Parameter embedding_range: torch.Size([1]), require_grad = False
+2025-09-05 16:09:32,543 INFO     Parameter entity_embedding: torch.Size([14541, 2000]), require_grad = True
+2025-09-05 16:09:32,543 INFO     Parameter relation_embedding: torch.Size([237, 1000]), require_grad = True
+/usr/local/lib/python3.12/dist-packages/torch/utils/data/dataloader.py:627: UserWarning: This DataLoader will create 5 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(
+2025-09-05 16:09:36,281 INFO     Ramdomly Initializing RotatE Model...
+2025-09-05 16:09:36,281 INFO     Start Training...
+2025-09-05 16:09:36,281 INFO     init_step = 0
+2025-09-05 16:09:36,282 INFO     batch_size = 1024
+2025-09-05 16:09:36,282 INFO     negative_adversarial_sampling = True
+2025-09-05 16:09:36,282 INFO     hidden_dim = 1000
+2025-09-05 16:09:36,282 INFO     gamma = 9.000000
+2025-09-05 16:09:36,282 INFO     initial_adversarial_temperature = 1.000000
+2025-09-05 16:09:36,282 INFO     decay_rate = 0.000100
+2025-09-05 16:09:36,282 INFO     learning_rate = 0
+/usr/local/lib/python3.12/dist-packages/torch/utils/data/dataloader.py:627: UserWarning: This DataLoader will create 5 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(
+2025-09-05 16:09:39,869 INFO     Training average positive_sample_loss at step 0: 2.551997
+2025-09-05 16:09:39,869 INFO     Training average negative_sample_loss at step 0: 0.083249
+2025-09-05 16:09:39,869 INFO     Training average loss at step 0: 1.317623
+2025-09-05 16:09:39,869 INFO     Training average current_temperature at step 0: 1.000000
+2025-09-05 16:09:39,869 INFO     Evaluating on Valid Dataset...
+2025-09-05 16:09:41,115 INFO     Evaluating the model... (0/2192)
+2025-09-05 16:11:50,882 INFO     Evaluating the model... (1000/2192)
+2025-09-05 16:14:00,921 INFO     Evaluating the model... (2000/2192)
+2025-09-05 16:14:25,183 INFO     Valid MRR at step 0: 0.005190
+2025-09-05 16:14:25,183 INFO     Valid MR at step 0: 6744.251697
+2025-09-05 16:14:25,183 INFO     Valid HITS@1 at step 0: 0.004163
+2025-09-05 16:14:25,183 INFO     Valid HITS@3 at step 0: 0.004733
+2025-09-05 16:14:25,183 INFO     Valid HITS@10 at step 0: 0.005674
+2025-09-05 16:14:52,537 INFO     Training average positive_sample_loss at step 100: 2.084253
+2025-09-05 16:14:52,537 INFO     Training average negative_sample_loss at step 100: 0.163313
+2025-09-05 16:14:52,537 INFO     Training average loss at step 100: 1.123783
+2025-09-05 16:14:52,537 INFO     Training average current_temperature at step 100: 0.994967
+2025-09-05 16:15:18,881 INFO     Training average positive_sample_loss at step 200: 1.158486
+2025-09-05 16:15:18,881 INFO     Training average negative_sample_loss at step 200: 0.432444
+2025-09-05 16:15:18,881 INFO     Training average loss at step 200: 0.795465
+2025-09-05 16:15:18,881 INFO     Training average current_temperature at step 200: 0.985066
+2025-09-05 16:15:45,244 INFO     Training average positive_sample_loss at step 300: 0.857789
+2025-09-05 16:15:45,244 INFO     Training average negative_sample_loss at step 300: 0.557184
+2025-09-05 16:15:45,244 INFO     Training average loss at step 300: 0.707486
+2025-09-05 16:15:45,244 INFO     Training average current_temperature at step 300: 0.975264
+2025-09-05 16:16:11,373 INFO     Training average positive_sample_loss at step 400: 0.742907
+2025-09-05 16:16:11,374 INFO     Training average negative_sample_loss at step 400: 0.593586
+2025-09-05 16:16:11,374 INFO     Training average loss at step 400: 0.668247
+2025-09-05 16:16:11,374 INFO     Training average current_temperature at step 400: 0.965559
+2025-09-05 16:16:37,474 INFO     Training average positive_sample_loss at step 500: 0.681966
+2025-09-05 16:16:37,474 INFO     Training average negative_sample_loss at step 500: 0.601590
+2025-09-05 16:16:37,474 INFO     Training average loss at step 500: 0.641778
+2025-09-05 16:16:37,474 INFO     Training average current_temperature at step 500: 0.955952
+2025-09-05 16:17:07,244 INFO     Training average positive_sample_loss at step 600: 0.597094
+2025-09-05 16:17:07,245 INFO     Training average negative_sample_loss at step 600: 0.584528
+2025-09-05 16:17:07,245 INFO     Training average loss at step 600: 0.590811
+2025-09-05 16:17:07,245 INFO     Training average current_temperature at step 600: 0.946439
+2025-09-05 16:17:33,380 INFO     Training average positive_sample_loss at step 700: 0.580411
+2025-09-05 16:17:33,380 INFO     Training average negative_sample_loss at step 700: 0.549867
+2025-09-05 16:17:33,381 INFO     Training average loss at step 700: 0.565139
+2025-09-05 16:17:33,381 INFO     Training average current_temperature at step 700: 0.937021
+2025-09-05 16:17:59,683 INFO     Training average positive_sample_loss at step 800: 0.571144
+2025-09-05 16:17:59,690 INFO     Training average negative_sample_loss at step 800: 0.533414
+2025-09-05 16:17:59,690 INFO     Training average loss at step 800: 0.552279
+2025-09-05 16:17:59,690 INFO     Training average current_temperature at step 800: 0.927697
+2025-09-05 16:18:26,201 INFO     Training average positive_sample_loss at step 900: 0.556975
+2025-09-05 16:18:26,201 INFO     Training average negative_sample_loss at step 900: 0.518623
+2025-09-05 16:18:26,201 INFO     Training average loss at step 900: 0.537799
+2025-09-05 16:18:26,201 INFO     Training average current_temperature at step 900: 0.918466
+2025-09-05 16:18:52,297 INFO     Training average positive_sample_loss at step 1000: 0.541456
+2025-09-05 16:18:52,297 INFO     Training average negative_sample_loss at step 1000: 0.502754
+2025-09-05 16:18:52,297 INFO     Training average loss at step 1000: 0.522105
+2025-09-05 16:18:52,297 INFO     Training average current_temperature at step 1000: 0.909327
+2025-09-05 16:19:21,530 INFO     Training average positive_sample_loss at step 1100: 0.502486
+2025-09-05 16:19:21,531 INFO     Training average negative_sample_loss at step 1100: 0.482434
+2025-09-05 16:19:21,531 INFO     Training average loss at step 1100: 0.492460
+2025-09-05 16:19:21,531 INFO     Training average current_temperature at step 1100: 0.900279
+2025-09-05 16:19:47,958 INFO     Training average positive_sample_loss at step 1200: 0.474597
+2025-09-05 16:19:47,959 INFO     Training average negative_sample_loss at step 1200: 0.443978
+2025-09-05 16:19:47,959 INFO     Training average loss at step 1200: 0.459287
+2025-09-05 16:19:47,959 INFO     Training average current_temperature at step 1200: 0.891320
+2025-09-05 16:20:14,148 INFO     Training average positive_sample_loss at step 1300: 0.471417
+2025-09-05 16:20:14,149 INFO     Training average negative_sample_loss at step 1300: 0.424380
+2025-09-05 16:20:14,149 INFO     Training average loss at step 1300: 0.447899
+2025-09-05 16:20:14,149 INFO     Training average current_temperature at step 1300: 0.882451
+2025-09-05 16:20:40,921 INFO     Training average positive_sample_loss at step 1400: 0.461506
+2025-09-05 16:20:40,922 INFO     Training average negative_sample_loss at step 1400: 0.410906
+2025-09-05 16:20:40,922 INFO     Training average loss at step 1400: 0.436206
+2025-09-05 16:20:40,922 INFO     Training average current_temperature at step 1400: 0.873670
+2025-09-05 16:21:07,083 INFO     Training average positive_sample_loss at step 1500: 0.451025
+2025-09-05 16:21:07,083 INFO     Training average negative_sample_loss at step 1500: 0.397587
+2025-09-05 16:21:07,083 INFO     Training average loss at step 1500: 0.424306
+2025-09-05 16:21:07,083 INFO     Training average current_temperature at step 1500: 0.864976
+2025-09-05 16:21:36,224 INFO     Training average positive_sample_loss at step 1600: 0.434461
+2025-09-05 16:21:36,225 INFO     Training average negative_sample_loss at step 1600: 0.384314
+2025-09-05 16:21:36,225 INFO     Training average loss at step 1600: 0.409387
+2025-09-05 16:21:36,225 INFO     Training average current_temperature at step 1600: 0.856369
+2025-09-05 16:22:02,565 INFO     Training average positive_sample_loss at step 1700: 0.388132
+2025-09-05 16:22:02,565 INFO     Training average negative_sample_loss at step 1700: 0.356261
+2025-09-05 16:22:02,565 INFO     Training average loss at step 1700: 0.372196
+2025-09-05 16:22:02,565 INFO     Training average current_temperature at step 1700: 0.847848
+2025-09-05 16:22:28,874 INFO     Training average positive_sample_loss at step 1800: 0.392996
+2025-09-05 16:22:28,874 INFO     Training average negative_sample_loss at step 1800: 0.338469
+2025-09-05 16:22:28,874 INFO     Training average loss at step 1800: 0.365733
+2025-09-05 16:22:28,874 INFO     Training average current_temperature at step 1800: 0.839411
+2025-09-05 16:22:55,707 INFO     Training average positive_sample_loss at step 1900: 0.386149
+2025-09-05 16:22:55,710 INFO     Training average negative_sample_loss at step 1900: 0.328741
+2025-09-05 16:22:55,710 INFO     Training average loss at step 1900: 0.357445
+2025-09-05 16:22:55,710 INFO     Training average current_temperature at step 1900: 0.831059
+2025-09-05 16:23:21,849 INFO     Training average positive_sample_loss at step 2000: 0.378038
+2025-09-05 16:23:21,854 INFO     Training average negative_sample_loss at step 2000: 0.318130
+2025-09-05 16:23:21,855 INFO     Training average loss at step 2000: 0.348084
+2025-09-05 16:23:21,855 INFO     Training average current_temperature at step 2000: 0.822789
+2025-09-05 16:23:47,999 INFO     Training average positive_sample_loss at step 2100: 0.366333
+2025-09-05 16:23:48,000 INFO     Training average negative_sample_loss at step 2100: 0.309565
+2025-09-05 16:23:48,000 INFO     Training average loss at step 2100: 0.337949
+2025-09-05 16:23:48,000 INFO     Training average current_temperature at step 2100: 0.814602
+2025-09-05 16:24:17,389 INFO     Training average positive_sample_loss at step 2200: 0.330382
+2025-09-05 16:24:17,389 INFO     Training average negative_sample_loss at step 2200: 0.293722
+2025-09-05 16:24:17,389 INFO     Training average loss at step 2200: 0.312052
+2025-09-05 16:24:17,389 INFO     Training average current_temperature at step 2200: 0.806496
+2025-09-05 16:24:43,551 INFO     Training average positive_sample_loss at step 2300: 0.326001
+2025-09-05 16:24:43,551 INFO     Training average negative_sample_loss at step 2300: 0.274744
+2025-09-05 16:24:43,551 INFO     Training average loss at step 2300: 0.300372
+2025-09-05 16:24:43,551 INFO     Training average current_temperature at step 2300: 0.798471
+2025-09-05 16:25:09,668 INFO     Training average positive_sample_loss at step 2400: 0.324364
+2025-09-05 16:25:09,668 INFO     Training average negative_sample_loss at step 2400: 0.268334
+2025-09-05 16:25:09,668 INFO     Training average loss at step 2400: 0.296349
+2025-09-05 16:25:09,668 INFO     Training average current_temperature at step 2400: 0.790525
+2025-09-05 16:25:35,836 INFO     Change learning_rate to 0.000005 at step 2500
+2025-09-05 16:25:35,836 INFO     Training average positive_sample_loss at step 2500: 0.317243
+2025-09-05 16:25:35,836 INFO     Training average negative_sample_loss at step 2500: 0.262727
+2025-09-05 16:25:35,836 INFO     Training average loss at step 2500: 0.289985
+2025-09-05 16:25:35,836 INFO     Training average current_temperature at step 2500: 0.782659
+2025-09-05 16:26:01,930 INFO     Training average positive_sample_loss at step 2600: 0.324318
+2025-09-05 16:26:01,931 INFO     Training average negative_sample_loss at step 2600: 0.250006
+2025-09-05 16:26:01,931 INFO     Training average loss at step 2600: 0.287162
+2025-09-05 16:26:01,931 INFO     Training average current_temperature at step 2600: 0.774871
+2025-09-05 16:26:30,935 INFO     Training average positive_sample_loss at step 2700: 0.310152
+2025-09-05 16:26:30,935 INFO     Training average negative_sample_loss at step 2700: 0.247440
+2025-09-05 16:26:30,935 INFO     Training average loss at step 2700: 0.278796
+2025-09-05 16:26:30,935 INFO     Training average current_temperature at step 2700: 0.767161
+2025-09-05 16:26:57,121 INFO     Training average positive_sample_loss at step 2800: 0.289216
+2025-09-05 16:26:57,122 INFO     Training average negative_sample_loss at step 2800: 0.244476
+2025-09-05 16:26:57,122 INFO     Training average loss at step 2800: 0.266846
+2025-09-05 16:26:57,122 INFO     Training average current_temperature at step 2800: 0.759527
+2025-09-05 16:27:23,188 INFO     Training average positive_sample_loss at step 2900: 0.290303
+2025-09-05 16:27:23,188 INFO     Training average negative_sample_loss at step 2900: 0.241735
+2025-09-05 16:27:23,188 INFO     Training average loss at step 2900: 0.266019
+2025-09-05 16:27:23,189 INFO     Training average current_temperature at step 2900: 0.751969
+2025-09-05 16:27:49,178 INFO     Training average positive_sample_loss at step 3000: 0.290426
+2025-09-05 16:27:49,179 INFO     Training average negative_sample_loss at step 3000: 0.239847
+2025-09-05 16:27:49,179 INFO     Training average loss at step 3000: 0.265137
+2025-09-05 16:27:49,179 INFO     Training average current_temperature at step 3000: 0.744486
+2025-09-05 16:28:15,321 INFO     Training average positive_sample_loss at step 3100: 0.290854
+2025-09-05 16:28:15,321 INFO     Training average negative_sample_loss at step 3100: 0.237639
+2025-09-05 16:28:15,321 INFO     Training average loss at step 3100: 0.264247
+2025-09-05 16:28:15,321 INFO     Training average current_temperature at step 3100: 0.737078
+2025-09-05 16:28:43,850 INFO     Training average positive_sample_loss at step 3200: 0.288385
+2025-09-05 16:28:43,855 INFO     Training average negative_sample_loss at step 3200: 0.236191
+2025-09-05 16:28:43,855 INFO     Training average loss at step 3200: 0.262288
+2025-09-05 16:28:43,855 INFO     Training average current_temperature at step 3200: 0.729744
+2025-09-05 16:29:10,170 INFO     Training average positive_sample_loss at step 3300: 0.280794
+2025-09-05 16:29:10,170 INFO     Training average negative_sample_loss at step 3300: 0.234165
+2025-09-05 16:29:10,170 INFO     Training average loss at step 3300: 0.257480
+2025-09-05 16:29:10,171 INFO     Training average current_temperature at step 3300: 0.722482
+2025-09-05 16:29:36,190 INFO     Training average positive_sample_loss at step 3400: 0.281907
+2025-09-05 16:29:36,190 INFO     Training average negative_sample_loss at step 3400: 0.233399
+2025-09-05 16:29:36,190 INFO     Training average loss at step 3400: 0.257653
+2025-09-05 16:29:36,190 INFO     Training average current_temperature at step 3400: 0.715293
+2025-09-05 16:30:02,257 INFO     Training average positive_sample_loss at step 3500: 0.280612
+2025-09-05 16:30:02,257 INFO     Training average negative_sample_loss at step 3500: 0.231906
+2025-09-05 16:30:02,257 INFO     Training average loss at step 3500: 0.256259
+2025-09-05 16:30:02,258 INFO     Training average current_temperature at step 3500: 0.708176
+2025-09-05 16:30:28,266 INFO     Training average positive_sample_loss at step 3600: 0.280704
+2025-09-05 16:30:28,266 INFO     Training average negative_sample_loss at step 3600: 0.230937
+2025-09-05 16:30:28,266 INFO     Training average loss at step 3600: 0.255821
+2025-09-05 16:30:28,266 INFO     Training average current_temperature at step 3600: 0.701129
+2025-09-05 16:30:54,332 INFO     Training average positive_sample_loss at step 3700: 0.281291
+2025-09-05 16:30:54,332 INFO     Training average negative_sample_loss at step 3700: 0.229698
+2025-09-05 16:30:54,332 INFO     Training average loss at step 3700: 0.255494
+2025-09-05 16:30:54,332 INFO     Training average current_temperature at step 3700: 0.694152
+2025-09-05 16:31:23,134 INFO     Training average positive_sample_loss at step 3800: 0.273926
+2025-09-05 16:31:23,135 INFO     Training average negative_sample_loss at step 3800: 0.228553
+2025-09-05 16:31:23,135 INFO     Training average loss at step 3800: 0.251239
+2025-09-05 16:31:23,135 INFO     Training average current_temperature at step 3800: 0.687245
+2025-09-05 16:31:49,147 INFO     Training average positive_sample_loss at step 3900: 0.272709
+2025-09-05 16:31:49,152 INFO     Training average negative_sample_loss at step 3900: 0.226913
+2025-09-05 16:31:49,152 INFO     Training average loss at step 3900: 0.249811
+2025-09-05 16:31:49,152 INFO     Training average current_temperature at step 3900: 0.680406
+2025-09-05 16:32:15,237 INFO     Training average positive_sample_loss at step 4000: 0.271499
+2025-09-05 16:32:15,237 INFO     Training average negative_sample_loss at step 4000: 0.225362
+2025-09-05 16:32:15,237 INFO     Training average loss at step 4000: 0.248431
+2025-09-05 16:32:15,237 INFO     Training average current_temperature at step 4000: 0.673636
+2025-09-05 16:32:41,278 INFO     Training average positive_sample_loss at step 4100: 0.273604
+2025-09-05 16:32:41,285 INFO     Training average negative_sample_loss at step 4100: 0.224287
+2025-09-05 16:32:41,285 INFO     Training average loss at step 4100: 0.248945
+2025-09-05 16:32:41,285 INFO     Training average current_temperature at step 4100: 0.666933
+2025-09-05 16:33:07,294 INFO     Training average positive_sample_loss at step 4200: 0.272214
+2025-09-05 16:33:07,298 INFO     Training average negative_sample_loss at step 4200: 0.223035
+2025-09-05 16:33:07,299 INFO     Training average loss at step 4200: 0.247625
+2025-09-05 16:33:07,299 INFO     Training average current_temperature at step 4200: 0.660296
+2025-09-05 16:33:36,056 INFO     Training average positive_sample_loss at step 4300: 0.267091
+2025-09-05 16:33:36,056 INFO     Training average negative_sample_loss at step 4300: 0.221909
+2025-09-05 16:33:36,056 INFO     Training average loss at step 4300: 0.244500
+2025-09-05 16:33:36,056 INFO     Training average current_temperature at step 4300: 0.653726
+2025-09-05 16:34:02,825 INFO     Training average positive_sample_loss at step 4400: 0.264407
+2025-09-05 16:34:02,825 INFO     Training average negative_sample_loss at step 4400: 0.220916
+2025-09-05 16:34:02,825 INFO     Training average loss at step 4400: 0.242661
+2025-09-05 16:34:02,825 INFO     Training average current_temperature at step 4400: 0.647221
+2025-09-05 16:34:28,909 INFO     Training average positive_sample_loss at step 4500: 0.264384
+2025-09-05 16:34:28,909 INFO     Training average negative_sample_loss at step 4500: 0.219976
+2025-09-05 16:34:28,909 INFO     Training average loss at step 4500: 0.242180
+2025-09-05 16:34:28,909 INFO     Training average current_temperature at step 4500: 0.640781
+2025-09-05 16:34:54,863 INFO     Training average positive_sample_loss at step 4600: 0.263590
+2025-09-05 16:34:54,863 INFO     Training average negative_sample_loss at step 4600: 0.217815
+2025-09-05 16:34:54,863 INFO     Training average loss at step 4600: 0.240702
+2025-09-05 16:34:54,863 INFO     Training average current_temperature at step 4600: 0.634404
+2025-09-05 16:35:20,862 INFO     Training average positive_sample_loss at step 4700: 0.264435
+2025-09-05 16:35:20,862 INFO     Training average negative_sample_loss at step 4700: 0.216737
+2025-09-05 16:35:20,862 INFO     Training average loss at step 4700: 0.240586
+2025-09-05 16:35:20,862 INFO     Training average current_temperature at step 4700: 0.628092
+2025-09-05 16:35:49,605 INFO     Training average positive_sample_loss at step 4800: 0.262583
+2025-09-05 16:35:49,605 INFO     Training average negative_sample_loss at step 4800: 0.216409
+2025-09-05 16:35:49,605 INFO     Training average loss at step 4800: 0.239496
+2025-09-05 16:35:49,605 INFO     Training average current_temperature at step 4800: 0.621842
+2025-09-05 16:36:15,852 INFO     Training average positive_sample_loss at step 4900: 0.255866
+2025-09-05 16:36:15,859 INFO     Training average negative_sample_loss at step 4900: 0.215040
+2025-09-05 16:36:15,859 INFO     Training average loss at step 4900: 0.235453
+2025-09-05 16:36:15,859 INFO     Training average current_temperature at step 4900: 0.615654
+2025-09-05 16:36:49,573 INFO     Evaluating on Valid Dataset...
+2025-09-05 16:36:50,708 INFO     Evaluating the model... (0/2192)
+2025-09-05 16:39:00,134 INFO     Evaluating the model... (1000/2192)
+2025-09-05 16:41:09,816 INFO     Evaluating the model... (2000/2192)
+2025-09-05 16:41:34,098 INFO     Valid MRR at step 4999: 0.252854
+2025-09-05 16:41:34,099 INFO     Valid MR at step 4999: 749.236555
+2025-09-05 16:41:34,099 INFO     Valid HITS@1 at step 4999: 0.181238
+2025-09-05 16:41:34,099 INFO     Valid HITS@3 at step 4999: 0.277502
+2025-09-05 16:41:34,099 INFO     Valid HITS@10 at step 4999: 0.393042
+2025-09-05 16:41:34,099 INFO     Evaluating on Test Dataset...
+2025-09-05 16:41:35,043 INFO     Evaluating the model... (0/2560)
+2025-09-05 16:43:44,120 INFO     Evaluating the model... (1000/2560)
+2025-09-05 16:45:53,598 INFO     Evaluating the model... (2000/2560)
+2025-09-05 16:47:05,317 INFO     Test MRR at step 4999: 0.249737
+2025-09-05 16:47:05,317 INFO     Test MR at step 4999: 771.457124
+2025-09-05 16:47:05,317 INFO     Test HITS@1 at step 4999: 0.177147
+2025-09-05 16:47:05,317 INFO     Test HITS@3 at step 4999: 0.274382
+2025-09-05 16:47:05,317 INFO     Test HITS@10 at step 4999: 0.390648
