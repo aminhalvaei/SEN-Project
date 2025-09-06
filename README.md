@@ -1,10 +1,17 @@
 
-# RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space
+# Extending RotatE: Interpretability and Multi-Relational Modeling
 **Introduction**
 
-This is the PyTorch implementation of the [RotatE](https://openreview.net/forum?id=HkgEQnRqYQ) model for knowledge graph embedding (KGE). We provide a toolkit that gives state-of-the-art performance of several popular KGE models. The toolkit is quite efficient, which is able to train a large KGE model within a few hours on a single GPU.
+This is an extended PyTorch implementation of the [RotatE](https://openreview.net/forum?id=HkgEQnRqYQ) model for knowledge graph embedding (KGE). We provide a toolkit that aims to improve performance of several popular KGE models. There is also some new models (RotateCT, MRotatE, MRotatECT) in addition to main models provided in the baseline. The toolkit has also used a new method for negative sampling phase that uses temprature annealing to make balance between the exploration and exploitation.
 
 A faster multi-GPU implementation of RotatE and other KGE models is available in [GraphVite](https://github.com/DeepGraphLearning/graphvite).
+
+This project is a fork of [Repository](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
+that belongs to RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space paper.
+
+**Execution Instructions**
+A jupyter notebook is provided to make execution of model easier in google colab enviroment.
+You can access it [here](SEN-Project.ipynb).
 
 **Implemented features**
 
@@ -14,6 +21,9 @@ Models:
  - [x] TransE
  - [x] ComplEx
  - [x] DistMult
+ - [x] RotateCT
+ - [x] MRotatE 
+ - [x] MRotatECT
 
 Evaluation Metrics:
 
@@ -24,6 +34,7 @@ Loss Function:
 
  - [x] Uniform Negative Sampling
  - [x] Self-Adversarial Negative Sampling
+ - [x] Temperature-Annealed Self-Adversarial Negative Sampling
 
 **Usage**
 
