@@ -9,10 +9,12 @@ A faster multi-GPU implementation of RotatE and other KGE models is available in
 This project is a fork of [Repository](https://github.com/DeepGraphLearning/KnowledgeGraphEmbedding)
 that belongs to RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space paper.
 
-**Execution Instructions**
+## **Execution Instructions**
 
 A jupyter notebook is provided to make execution of model easier in google colab enviroment.
 You can access it [here](https://github.com/aminhalvaei/SEN-Project/blob/master/SEN_Project.ipynb).
+
+---
 
 **Implemented features**
 
