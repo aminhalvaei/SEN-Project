@@ -1,252 +1,330 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Unified KGEModel with:
+  - TransE, DistMult, ComplEx, RotatE, pRotatE (baselines)
+  - RotateCT     : rotation around relation-specific centers (b_r)
+  - MRotatE      : entity rotation + relation rotation (about origin)
+  - MRotatECT    : entity rotation + relation rotation AROUND b_r (RotateCT inside)
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+Both RotateCT, MRotatE, and MRotatECT require complex entity embeddings:
+use CLI flag `-de / --double_entity_embedding`.
+"""
+
+from __future__ import absolute_import, division, print_function
 
 import logging
+from typing import Tuple
 
 import numpy as np
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torch.utils.data import DataLoader
 from sklearn.metrics import average_precision_score
 
-from torch.utils.data import DataLoader
-
+# Provided in your project
 from dataloader import TestDataset
 
+
 class KGEModel(nn.Module):
-    def __init__(self, model_name, nentity, nrelation, hidden_dim, gamma, 
-                 double_entity_embedding=False, double_relation_embedding=False):
-        super(KGEModel, self).__init__()
+    def __init__(
+        self,
+        model_name: str,
+        nentity: int,
+        nrelation: int,
+        hidden_dim: int,
+        gamma: float,
+        double_entity_embedding: bool = False,
+        double_relation_embedding: bool = False,
+    ):
+        super().__init__()
         self.model_name = model_name
         self.nentity = nentity
         self.nrelation = nrelation
         self.hidden_dim = hidden_dim
         self.epsilon = 2.0
-        
-        self.gamma = nn.Parameter(
-            torch.Tensor([gamma]), 
-            requires_grad=False
-        )
-        
+
+        # Margin (kept as nn.Parameter for checkpoint compatibility)
+        self.gamma = nn.Parameter(torch.tensor([gamma], dtype=torch.float), requires_grad=False)
+
+        # Used for init and phase scaling
         self.embedding_range = nn.Parameter(
-            torch.Tensor([(self.gamma.item() + self.epsilon) / hidden_dim]), 
-            requires_grad=False
+            torch.tensor([(self.gamma.item() + self.epsilon) / hidden_dim], dtype=torch.float),
+            requires_grad=False,
         )
-        
-        self.entity_dim = hidden_dim*2 if double_entity_embedding else hidden_dim
-        self.relation_dim = hidden_dim*2 if double_relation_embedding else hidden_dim
-        
+
+        # Complex entities => concatenated (Re | Im)
+        self.entity_dim = hidden_dim * 2 if double_entity_embedding else hidden_dim
+        # Only ComplEx uses complex relations
+        self.relation_dim = hidden_dim * 2 if double_relation_embedding else hidden_dim
+
+        # Base embeddings
         self.entity_embedding = nn.Parameter(torch.zeros(nentity, self.entity_dim))
-        nn.init.uniform_(
-            tensor=self.entity_embedding, 
-            a=-self.embedding_range.item(), 
-            b=self.embedding_range.item()
-        )
-        
+        nn.init.uniform_(self.entity_embedding, -self.embedding_range.item(), self.embedding_range.item())
+
         self.relation_embedding = nn.Parameter(torch.zeros(nrelation, self.relation_dim))
-        nn.init.uniform_(
-            tensor=self.relation_embedding, 
-            a=-self.embedding_range.item(), 
-            b=self.embedding_range.item()
-        )
-        
-        if model_name == 'pRotatE':
-            self.modulus = nn.Parameter(torch.Tensor([[0.5 * self.embedding_range.item()]]))
-        
-        #Do not forget to modify this line when you add a new model in the "forward" function
-        if model_name not in ['TransE', 'DistMult', 'ComplEx', 'RotatE', 'pRotatE']:
-            raise ValueError('model %s not supported' % model_name)
-            
-        if model_name == 'RotatE' and (not double_entity_embedding or double_relation_embedding):
-            raise ValueError('RotatE should use --double_entity_embedding')
+        nn.init.uniform_(self.relation_embedding, -self.embedding_range.item(), self.embedding_range.item())
 
-        if model_name == 'ComplEx' and (not double_entity_embedding or not double_relation_embedding):
-            raise ValueError('ComplEx should use --double_entity_embedding and --double_relation_embedding')
-        
-    def forward(self, sample, mode='single'):
-        '''
-        Forward function that calculate the score of a batch of triples.
-        In the 'single' mode, sample is a batch of triple.
-        In the 'head-batch' or 'tail-batch' mode, sample consists two part.
-        The first part is usually the positive sample.
-        And the second part is the entities in the negative samples.
-        Because negative samples and positive samples usually share two elements 
-        in their triple ((head, relation) or (relation, tail)).
-        '''
+        # pRotatE extra param
+        if model_name == "pRotatE":
+            self.modulus = nn.Parameter(torch.tensor([[0.5 * self.embedding_range.item()]], dtype=torch.float))
 
-        if mode == 'single':
-            batch_size, negative_sample_size = sample.size(0), 1
-            
-            head = torch.index_select(
-                self.entity_embedding, 
-                dim=0, 
-                index=sample[:,0]
-            ).unsqueeze(1)
-            
-            relation = torch.index_select(
-                self.relation_embedding, 
-                dim=0, 
-                index=sample[:,1]
-            ).unsqueeze(1)
-            
-            tail = torch.index_select(
-                self.entity_embedding, 
-                dim=0, 
-                index=sample[:,2]
-            ).unsqueeze(1)
-            
-        elif mode == 'head-batch':
+        # ---------------- Supported names (added MRotatECT) ----------------
+        supported = ["TransE", "DistMult", "ComplEx", "RotatE", "pRotatE", "RotateCT", "MRotatE", "MRotatECT"]
+        if model_name not in supported:
+            raise ValueError(f"model {model_name} not supported; choose from {supported}")
+
+        # Constraints
+        if model_name == "RotatE" and (not double_entity_embedding or double_relation_embedding):
+            raise ValueError("RotatE should use --double_entity_embedding and NOT --double_relation_embedding")
+        if model_name == "ComplEx" and (not double_entity_embedding or not double_relation_embedding):
+            raise ValueError("ComplEx should use --double_entity_embedding and --double_relation_embedding")
+
+        # Relation-specific center b_r (complex) needed for RotateCT and MRotatECT
+        if model_name in ["RotateCT", "MRotatECT"]:
+            if not double_entity_embedding:
+                raise ValueError(f"{model_name} requires --double_entity_embedding (complex entities)")
+            self.relation_center_embedding = nn.Parameter(torch.zeros(nrelation, self.entity_dim))
+            nn.init.uniform_(self.relation_center_embedding, -self.embedding_range.item(), self.embedding_range.item())
+
+        # Per-entity phase angles φ_e needed for MRotatE and MRotatECT
+        if model_name in ["MRotatE", "MRotatECT"]:
+            if not double_entity_embedding:
+                raise ValueError(f"{model_name} requires --double_entity_embedding (complex entities)")
+            self.entity_phase_embedding = nn.Parameter(torch.zeros(nentity, hidden_dim))
+            nn.init.uniform_(self.entity_phase_embedding, -self.embedding_range.item(), self.embedding_range.item())
+
+    # ---------------------------------------------------------------------
+    # Forward
+    # ---------------------------------------------------------------------
+    def forward(self, sample: torch.LongTensor, mode: str = "single") -> torch.Tensor:
+        """
+        Modes:
+          - 'single'     : sample is [B, 3]
+          - 'head-batch' : sample is (positive_part [B,3], corrupted_heads [B, K])
+          - 'tail-batch' : sample is (positive_part [B,3], corrupted_tails [B, K])
+        """
+        if mode == "single":
+            head = torch.index_select(self.entity_embedding, 0, sample[:, 0]).unsqueeze(1)
+            relation = torch.index_select(self.relation_embedding, 0, sample[:, 1]).unsqueeze(1)
+            tail = torch.index_select(self.entity_embedding, 0, sample[:, 2]).unsqueeze(1)
+
+            if self.model_name in ["RotateCT", "MRotatECT"]:
+                relation_center = torch.index_select(self.relation_center_embedding, 0, sample[:, 1]).unsqueeze(1)
+            if self.model_name in ["MRotatE", "MRotatECT"]:
+                head_phase = torch.index_select(self.entity_phase_embedding, 0, sample[:, 0]).unsqueeze(1)
+                tail_phase = torch.index_select(self.entity_phase_embedding, 0, sample[:, 2]).unsqueeze(1)
+
+        elif mode == "head-batch":
             tail_part, head_part = sample
-            batch_size, negative_sample_size = head_part.size(0), head_part.size(1)
-            
-            head = torch.index_select(
-                self.entity_embedding, 
-                dim=0, 
-                index=head_part.view(-1)
-            ).view(batch_size, negative_sample_size, -1)
-            
-            relation = torch.index_select(
-                self.relation_embedding, 
-                dim=0, 
-                index=tail_part[:, 1]
-            ).unsqueeze(1)
-            
-            tail = torch.index_select(
-                self.entity_embedding, 
-                dim=0, 
-                index=tail_part[:, 2]
-            ).unsqueeze(1)
-            
-        elif mode == 'tail-batch':
-            head_part, tail_part = sample
-            batch_size, negative_sample_size = tail_part.size(0), tail_part.size(1)
-            
-            head = torch.index_select(
-                self.entity_embedding, 
-                dim=0, 
-                index=head_part[:, 0]
-            ).unsqueeze(1)
-            
-            relation = torch.index_select(
-                self.relation_embedding,
-                dim=0,
-                index=head_part[:, 1]
-            ).unsqueeze(1)
-            
-            tail = torch.index_select(
-                self.entity_embedding, 
-                dim=0, 
-                index=tail_part.view(-1)
-            ).view(batch_size, negative_sample_size, -1)
-            
-        else:
-            raise ValueError('mode %s not supported' % mode)
-            
-        model_func = {
-            'TransE': self.TransE,
-            'DistMult': self.DistMult,
-            'ComplEx': self.ComplEx,
-            'RotatE': self.RotatE,
-            'pRotatE': self.pRotatE
-        }
-        
-        if self.model_name in model_func:
-            score = model_func[self.model_name](head, relation, tail, mode)
-        else:
-            raise ValueError('model %s not supported' % self.model_name)
-        
-        return score
-    
-    def TransE(self, head, relation, tail, mode):
-        if mode == 'head-batch':
-            score = head + (relation - tail)
-        else:
-            score = (head + relation) - tail
+            head = torch.index_select(self.entity_embedding, 0, head_part.view(-1)).view(
+                head_part.size(0), head_part.size(1), -1
+            )
+            relation = torch.index_select(self.relation_embedding, 0, tail_part[:, 1]).unsqueeze(1)
+            tail = torch.index_select(self.entity_embedding, 0, tail_part[:, 2]).unsqueeze(1)
 
-        score = self.gamma.item() - torch.norm(score, p=1, dim=2)
-        return score
+            if self.model_name in ["RotateCT", "MRotatECT"]:
+                relation_center = torch.index_select(self.relation_center_embedding, 0, tail_part[:, 1]).unsqueeze(1)
+            if self.model_name in ["MRotatE", "MRotatECT"]:
+                head_phase = torch.index_select(self.entity_phase_embedding, 0, head_part.view(-1)).view(
+                    head_part.size(0), head_part.size(1), -1
+                )
+                tail_phase = torch.index_select(self.entity_phase_embedding, 0, tail_part[:, 2]).unsqueeze(1)
+
+        elif mode == "tail-batch":
+            head_part, tail_part = sample
+            head = torch.index_select(self.entity_embedding, 0, head_part[:, 0]).unsqueeze(1)
+            relation = torch.index_select(self.relation_embedding, 0, head_part[:, 1]).unsqueeze(1)
+            tail = torch.index_select(self.entity_embedding, 0, tail_part.view(-1)).view(
+                tail_part.size(0), tail_part.size(1), -1
+            )
+
+            if self.model_name in ["RotateCT", "MRotatECT"]:
+                relation_center = torch.index_select(self.relation_center_embedding, 0, head_part[:, 1]).unsqueeze(1)
+            if self.model_name in ["MRotatE", "MRotatECT"]:
+                head_phase = torch.index_select(self.entity_phase_embedding, 0, head_part[:, 0]).unsqueeze(1)
+                tail_phase = torch.index_select(self.entity_phase_embedding, 0, tail_part.view(-1)).view(
+                    tail_part.size(0), tail_part.size(1), -1
+                )
+        else:
+            raise ValueError(f"mode {mode} not supported")
+
+        # Dispatch
+        if self.model_name == "RotateCT":
+            return self.RotateCT(head, relation, tail, relation_center, mode)
+        if self.model_name == "MRotatE":
+            return self.MRotatE(head, relation, tail, head_phase, tail_phase, mode)
+        if self.model_name == "MRotatECT":
+            return self.MRotatECT(head, relation, tail, head_phase, tail_phase, relation_center, mode)
+
+        model_func = {
+            "TransE": self.TransE,
+            "DistMult": self.DistMult,
+            "ComplEx": self.ComplEx,
+            "RotatE": self.RotatE,
+            "pRotatE": self.pRotatE,
+        }
+        return model_func[self.model_name](head, relation, tail, mode)
+
+    # ---------------------------------------------------------------------
+    # Baselines
+    # ---------------------------------------------------------------------
+    def TransE(self, head, relation, tail, mode):
+        score = head + (relation - tail) if mode == "head-batch" else (head + relation) - tail
+        return self.gamma.item() - torch.norm(score, p=1, dim=2)
 
     def DistMult(self, head, relation, tail, mode):
-        if mode == 'head-batch':
-            score = head * (relation * tail)
-        else:
-            score = (head * relation) * tail
-
-        score = score.sum(dim = 2)
-        return score
+        score = head * (relation * tail) if mode == "head-batch" else (head * relation) * tail
+        return score.sum(dim=2)
 
     def ComplEx(self, head, relation, tail, mode):
-        re_head, im_head = torch.chunk(head, 2, dim=2)
-        re_relation, im_relation = torch.chunk(relation, 2, dim=2)
-        re_tail, im_tail = torch.chunk(tail, 2, dim=2)
-
-        if mode == 'head-batch':
-            re_score = re_relation * re_tail + im_relation * im_tail
-            im_score = re_relation * im_tail - im_relation * re_tail
-            score = re_head * re_score + im_head * im_score
+        re_h, im_h = torch.chunk(head, 2, dim=2)
+        re_r, im_r = torch.chunk(relation, 2, dim=2)
+        re_t, im_t = torch.chunk(tail, 2, dim=2)
+        if mode == "head-batch":
+            re_s = re_r * re_t + im_r * im_t
+            im_s = re_r * im_t - im_r * re_t
+            score = re_h * re_s + im_h * im_s
         else:
-            re_score = re_head * re_relation - im_head * im_relation
-            im_score = re_head * im_relation + im_head * re_relation
-            score = re_score * re_tail + im_score * im_tail
-
-        score = score.sum(dim = 2)
-        return score
+            re_s = re_h * re_r - im_h * im_r
+            im_s = re_h * im_r + im_h * re_r
+            score = re_s * re_t + im_s * im_t
+        return score.sum(dim=2)
 
     def RotatE(self, head, relation, tail, mode):
         pi = 3.14159265358979323846
-        
-        re_head, im_head = torch.chunk(head, 2, dim=2)
-        re_tail, im_tail = torch.chunk(tail, 2, dim=2)
-
-        #Make phases of relations uniformly distributed in [-pi, pi]
-
-        phase_relation = relation/(self.embedding_range.item()/pi)
-
-        re_relation = torch.cos(phase_relation)
-        im_relation = torch.sin(phase_relation)
-
-        if mode == 'head-batch':
-            re_score = re_relation * re_tail + im_relation * im_tail
-            im_score = re_relation * im_tail - im_relation * re_tail
-            re_score = re_score - re_head
-            im_score = im_score - im_head
+        re_h, im_h = torch.chunk(head, 2, dim=2)
+        re_t, im_t = torch.chunk(tail, 2, dim=2)
+        phase_r = relation / (self.embedding_range.item() / pi)
+        re_r, im_r = torch.cos(phase_r), torch.sin(phase_r)
+        if mode == "head-batch":
+            re_s = re_r * re_t + im_r * im_t
+            im_s = re_r * im_t - im_r * re_t
+            re_s = re_s - re_h
+            im_s = im_s - im_h
         else:
-            re_score = re_head * re_relation - im_head * im_relation
-            im_score = re_head * im_relation + im_head * re_relation
-            re_score = re_score - re_tail
-            im_score = im_score - im_tail
-
-        score = torch.stack([re_score, im_score], dim = 0)
-        score = score.norm(dim = 0)
-
-        score = self.gamma.item() - score.sum(dim = 2)
-        return score
+            re_s = re_h * re_r - im_h * im_r
+            im_s = re_h * im_r + im_h * re_r
+            re_s = re_s - re_t
+            im_s = im_s - im_t
+        score = torch.stack([re_s, im_s], dim=0).norm(dim=0)
+        return self.gamma.item() - score.sum(dim=2)
 
     def pRotatE(self, head, relation, tail, mode):
-        pi = 3.14159262358979323846
-        
-        #Make phases of entities and relations uniformly distributed in [-pi, pi]
+        pi = 3.14159265358979323846
+        ph_h = head / (self.embedding_range.item() / pi)
+        ph_r = relation / (self.embedding_range.item() / pi)
+        ph_t = tail / (self.embedding_range.item() / pi)
+        score = ph_h + (ph_r - ph_t) if mode == "head-batch" else (ph_h + ph_r) - ph_t
+        score = torch.sin(score).abs()
+        return self.gamma.item() - score.sum(dim=2) * self.modulus
 
-        phase_head = head/(self.embedding_range.item()/pi)
-        phase_relation = relation/(self.embedding_range.item()/pi)
-        phase_tail = tail/(self.embedding_range.item()/pi)
-
-        if mode == 'head-batch':
-            score = phase_head + (phase_relation - phase_tail)
+    # ---------------------------------------------------------------------
+    # RotateCT (about relation center)
+    # ---------------------------------------------------------------------
+    def RotateCT(self, head, relation, tail, relation_center, mode):
+        pi = 3.14159265358979323846
+        re_h, im_h = torch.chunk(head, 2, dim=2)
+        re_t, im_t = torch.chunk(tail, 2, dim=2)
+        re_b, im_b = torch.chunk(relation_center, 2, dim=2)
+        phase_r = relation / (self.embedding_range.item() / pi)
+        re_r, im_r = torch.cos(phase_r), torch.sin(phase_r)
+        if mode == "head-batch":
+            re_rot = re_r * (re_t - re_b) + im_r * (im_t - im_b)
+            im_rot = re_r * (im_t - im_b) - im_r * (re_t - re_b)
+            re_s = re_rot - (re_h - re_b)
+            im_s = im_rot - (im_h - im_b)
         else:
-            score = (phase_head + phase_relation) - phase_tail
+            re_rot = (re_h - re_b) * re_r - (im_h - im_b) * im_r
+            im_rot = (re_h - re_b) * im_r + (im_h - im_b) * re_r
+            re_s = re_rot - (re_t - re_b)
+            im_s = im_rot - (im_t - im_b)
+        score = torch.stack([re_s, im_s], dim=0).norm(dim=0)
+        return self.gamma.item() - score.sum(dim=2)
 
-        score = torch.sin(score)            
-        score = torch.abs(score)
+    # ---------------------------------------------------------------------
+    # MRotatE (entity rotation + relation rotation about origin)
+    # ---------------------------------------------------------------------
+    def MRotatE(self, head, relation, tail, head_phase, tail_phase, mode):
+        pi = 3.14159265358979323846
+        re_h, im_h = torch.chunk(head, 2, dim=2)
+        re_t, im_t = torch.chunk(tail, 2, dim=2)
+        ph_r = relation / (self.embedding_range.item() / pi)
+        re_r, im_r = torch.cos(ph_r), torch.sin(ph_r)
+        ph_h = head_phase / (self.embedding_range.item() / pi)
+        ph_t = tail_phase / (self.embedding_range.item() / pi)
+        re_eh, im_eh = torch.cos(ph_h), torch.sin(ph_h)
+        re_et, im_et = torch.cos(ph_t), torch.sin(ph_t)
+        Eh_re = re_eh * re_h - im_eh * im_h
+        Eh_im = re_eh * im_h + im_eh * re_h
+        Et_re = re_et * re_t - im_et * im_t
+        Et_im = re_et * im_t + im_et * re_t
+        Rh_re = Eh_re * re_r - Eh_im * im_r
+        Rh_im = Eh_re * im_r + Eh_im * re_r
+        if mode == "head-batch":
+            re_s = (re_r * Et_re + im_r * Et_im) - Eh_re
+            im_s = (re_r * Et_im - im_r * Et_re) - Eh_im
+        else:
+            re_s = Rh_re - Et_re
+            im_s = Rh_im - Et_im
+        score = torch.stack([re_s, im_s], dim=0).norm(dim=0)
+        return self.gamma.item() - score.sum(dim=2)
 
-        score = self.gamma.item() - score.sum(dim = 2) * self.modulus
-        return score
-    
+    # ---------------------------------------------------------------------
+    # NEW: MRotatECT (entity rotation + RotateCT around b_r)
+    # ---------------------------------------------------------------------
+    def MRotatECT(self, head, relation, tail, head_phase, tail_phase, relation_center, mode):
+        """
+        MRotatECT:
+          - Entity rotation: E(x) = R(φ_x) ⊙ x
+          - Relation rotation AROUND center b_r (RotateCT):
+                (E(h) - b_r) ⊙ R(θ_r)  ≈  (E(t) - b_r)
+        This combines multiplicity capacity (entity rotation) with
+        non-commutative composition (rotation about b_r).
+        """
+        pi = 3.14159265358979323846
+
+        # Split complex entity parts
+        re_h, im_h = torch.chunk(head, 2, dim=2)
+        re_t, im_t = torch.chunk(tail, 2, dim=2)
+        re_b, im_b = torch.chunk(relation_center, 2, dim=2)
+
+        # Convert angles to unit complex rotations
+        ph_r = relation / (self.embedding_range.item() / pi)   # θ_r
+        re_r, im_r = torch.cos(ph_r), torch.sin(ph_r)
+
+        ph_h = head_phase / (self.embedding_range.item() / pi) # φ_h
+        ph_t = tail_phase / (self.embedding_range.item() / pi) # φ_t
+        re_eh, im_eh = torch.cos(ph_h), torch.sin(ph_h)
+        re_et, im_et = torch.cos(ph_t), torch.sin(ph_t)
+
+        # 1) Entity rotations: E(h), E(t)
+        Eh_re = re_eh * re_h - im_eh * im_h
+        Eh_im = re_eh * im_h + im_eh * re_h
+        Et_re = re_et * re_t - im_et * im_t
+        Et_im = re_et * im_t + im_et * re_t
+
+        # 2) Rotate AROUND b_r (like RotateCT)
+        if mode == "head-batch":
+            # rotate (E(t) - b) then compare with (E(h) - b)
+            re_rot = re_r * (Et_re - re_b) + im_r * (Et_im - im_b)
+            im_rot = re_r * (Et_im - im_b) - im_r * (Et_re - re_b)
+            re_s = re_rot - (Eh_re - re_b)
+            im_s = im_rot - (Eh_im - im_b)
+        else:
+            # rotate (E(h) - b) then compare with (E(t) - b)
+            re_rot = (Eh_re - re_b) * re_r - (Eh_im - im_b) * im_r
+            im_rot = (Eh_re - re_b) * im_r + (Eh_im - im_b) * re_r
+            re_s = re_rot - (Et_re - re_b)
+            im_s = im_rot - (Et_im - im_b)
+
+        score = torch.stack([re_s, im_s], dim=0).norm(dim=0)
+        return self.gamma.item() - score.sum(dim=2)
+
+    # ---------------------------------------------------------------------
+    # Train / Test helpers (same API as original)
+    # ---------------------------------------------------------------------
     @staticmethod
     def train_step(model, optimizer, train_iterator, args, step):
         '''
@@ -260,7 +338,6 @@ class KGEModel(nn.Module):
 
         model.train()
         optimizer.zero_grad()
-
         positive_sample, negative_sample, subsampling_weight, mode = next(train_iterator)
 
         if args.cuda:
@@ -278,10 +355,10 @@ class KGEModel(nn.Module):
             negative_score = (F.softmax(negative_score * current_temperature, dim = 1).detach() 
                               * F.logsigmoid(-negative_score)).sum(dim = 1)
         else:
-            negative_score = F.logsigmoid(-negative_score).mean(dim = 1)
+            negative_score = F.logsigmoid(-negative_score).mean(dim=1)
 
         positive_score = model(positive_sample)
-        positive_score = F.logsigmoid(positive_score).squeeze(dim = 1)
+        positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
 
         if args.uni_weight:
             positive_sample_loss = - positive_score.mean()
