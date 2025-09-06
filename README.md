@@ -22,9 +22,9 @@ Models:
  - [x] TransE
  - [x] ComplEx
  - [x] DistMult
- - [x] RotateCT
- - [x] MRotatE 
- - [x] MRotatECT
+ - [x] RotateCT (new)
+ - [x] MRotatE (new)
+ - [x] MRotatECT (new)
 
 Evaluation Metrics:
 
@@ -35,7 +35,7 @@ Loss Function:
 
  - [x] Uniform Negative Sampling
  - [x] Self-Adversarial Negative Sampling
- - [x] Temperature-Annealed Self-Adversarial Negative Sampling
+ - [x] Temperature-Annealed Self-Adversarial Negative Sampling (new)
 
 **Usage**
 
