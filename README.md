@@ -10,6 +10,7 @@ This project is a fork of [Repository](https://github.com/DeepGraphLearning/Know
 that belongs to RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space paper.
 
 **Execution Instructions**
+
 A jupyter notebook is provided to make execution of model easier in google colab enviroment.
 You can access it [here](https://github.com/aminhalvaei/SEN-Project/blob/master/SEN_Project.ipynb).
 
