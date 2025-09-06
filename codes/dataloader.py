@@ -182,3 +182,24 @@ class BidirectionalOneShotIterator(object):
         while True:
             for data in dataloader:
                 yield data
+
+class RelationBalancedSampler(torch.utils.data.Sampler):
+    def __init__(self, triples, num_relations, num_samples=None):
+        self.relation_to_indices = {r: [] for r in range(num_relations)}
+        for idx, (_, r, _) in enumerate(triples):
+            self.relation_to_indices[r].append(idx)
+
+        self.num_relations = num_relations
+        self.triples = triples
+        self.num_samples = num_samples if num_samples is not None else len(triples)
+
+    def __iter__(self):
+        for _ in range(self.num_samples):
+            rel = np.random.randint(self.num_relations)
+            if len(self.relation_to_indices[rel]) == 0:
+                continue
+            idx = np.random.choice(self.relation_to_indices[rel])
+            yield idx
+
+    def __len__(self):
+        return self.num_samples
